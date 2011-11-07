@@ -43,18 +43,18 @@ var PrefixSearch = function(_data, _index)
     //
     // Properties.
     //
-   
+
     var tempData    = _data,
-        trie        = new TrieNode(),
-        index       = _index,
-        dataType    = null,
-        numItems    = 0,
-        initialized = false;
-    
+    trie        = new TrieNode(),
+    index       = _index,
+    dataType    = null,
+    numItems    = 0,
+    initialized = false;
+
     //
     // Private API.
     //
-    
+
     /**
      * Ensures the trie is initialized upon an API call.
      */
@@ -64,7 +64,7 @@ var PrefixSearch = function(_data, _index)
             throw 'Search engine has not been initialized.';
         }
     };
-    
+
     /**
      * Is it a string?
      */
@@ -82,7 +82,7 @@ var PrefixSearch = function(_data, _index)
         }
         return false;
     };
-    
+
     /**
      * 's' for strings, 'o' for objects.
      */
@@ -97,7 +97,7 @@ var PrefixSearch = function(_data, _index)
             return 'o';
         }
     };
-    
+
     /**
      * Recursive insertion.
      * @param node {TrieNode} The current node.
@@ -123,7 +123,7 @@ var PrefixSearch = function(_data, _index)
         }
         _insert(node.children[ch], term.substring(1), data);
     };
-    
+
     /**
      * Builds the trie with initial data. The insertion process
      * does not respect the case of the terms (i.e it is case-insensitive).
@@ -139,11 +139,11 @@ var PrefixSearch = function(_data, _index)
         if (dataType === 'o' && !index) {
             throw 'Undefined index. Please specify a property to index on.';
         }
-        
+
         var term = null,
-            i    = 0,
-            l    = tempData.length,
-            obj  = null;
+        i    = 0,
+        l    = tempData.length,
+        obj  = null;
         for (i = 0; i < l; ++i) {
             obj = tempData[i];
             if (obj) {
@@ -162,7 +162,7 @@ var PrefixSearch = function(_data, _index)
         // Delete data and keep index.
         tempData = null;
     };
-    
+
     /**
      * Flattens a part of the tree into a list i.e creates a list of 
      * all the nodes containing a word-end from that point down.
@@ -180,8 +180,8 @@ var PrefixSearch = function(_data, _index)
         for (var ch in node.children) {
             if (node.children.hasOwnProperty(ch)) {
                 var temp = _flatten(node.children[ch]),
-                    i    = 0,
-                    l    = temp.length;
+                i    = 0,
+                l    = temp.length;
                 for (i = 0; i < l; i ++) {
                     results.push(temp[i]);
                 }
@@ -189,7 +189,7 @@ var PrefixSearch = function(_data, _index)
         }
         return results;
     };
-    
+
     /**
      * Searches (recursively) for all prefix matches of a term.
      * @param node {TrieNode} The current node.
@@ -204,24 +204,24 @@ var PrefixSearch = function(_data, _index)
             if (!node.children[ch]) {
                 return [];
             } else {
-               return _find(node.children[ch], term.substring(1));
+                return _find(node.children[ch], term.substring(1));
             }
         }
     };
-    
+
     //
     // Public API.
     //
 
     return {
-        
+
         // Expose attributes.
         _attrs: {
             trie       : trie,
             dataType   : dataType,
             initialized: initialized
         },
-        
+
         // Expose private methods through the _ut namespace for unit-testing.
         // These should not be used directly.
         _ut: {
@@ -232,7 +232,7 @@ var PrefixSearch = function(_data, _index)
             getType : _getType,
             isString: _isString
         },
-        
+
         /**
          * Search for all words having 'term' as a prefix.
          * @param term
@@ -249,7 +249,7 @@ var PrefixSearch = function(_data, _index)
             }
             return _find(trie, term);
         },
-        
+
         /**
          * Get number of words in the trie.
          * @returns {Number}
@@ -258,7 +258,7 @@ var PrefixSearch = function(_data, _index)
         {
             return numItems;
         },
-        
+
         /**
          * Add a new word (or object) in the trie.
          * @param object {Object} String or object to add.
@@ -271,7 +271,7 @@ var PrefixSearch = function(_data, _index)
                 return;
             }
             var type = _getType(object),
-                term = null;
+            term = null;
             if (dataType !== type) {
                 throw 'Unsupported type.';
             }
@@ -285,7 +285,7 @@ var PrefixSearch = function(_data, _index)
             }
             return _insert(trie, term, object);
         },
-        
+
         /**
          * Build the trie with the initial data. If the data is too big, then
          * building will be deferred and executed async in a setTimeout so that
@@ -308,6 +308,6 @@ var PrefixSearch = function(_data, _index)
             }
             return true;
         }
-        
+
     };
 };
