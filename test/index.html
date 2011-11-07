@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Prefix Search JS QUnit tests</title>
+  	<link rel="stylesheet" href="../lib/qunit.css" type="text/css" media="screen" />
+	<script type="text/javascript" src="../lib/jquery.min.js"></script>
+	<script type="text/javascript" src="../lib/qunit.js"></script>
+	<script type="text/javascript" src="../src/prefixsearch.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+		  	
+			module("Tools tests");
+			
+			
+			test("_isString()", function() {
+				var pf = PrefixSearch();
+			    ok(pf._ut.isString("abc"), "'abc'");
+			    ok(pf._ut.isString(new Object("abc")), "new Object('abc')");
+			    ok(!pf._ut.isString(null), 'null');
+			    ok(!pf._ut.isString(undefined), 'undefined');
+			});
+			
+			test("_getType()", function() {
+				var pf = PrefixSearch();
+			    ok(pf._ut.getType("abc") === 's', "'abc'");
+			    ok(pf._ut.getType(new Object("abc")) === 's', "new Object('abc')");
+			    ok(pf._ut.getType({name: 'abc'}) === 'o', "{name: 'abc'}");
+			    raises(function(){pf._ut.getType(null) === 'o'}, "Exception on null.");
+			    raises(function(){pf._ut.getType(undefined) === 'o'}, "Exception on undefined.");
+			});
+			
+			module("Build tests");
+
+			test("_build()", function() {
+			    
+			    var small1 = [ 
+			    	"alex",
+			    	"maria",
+			    	"stephanos",
+			    	"george"
+				];
+			    
+			    var small2 = [
+					{name: "alex"},
+					{name: "maria"},
+					{name: "stephanos"},
+					{name: "george"}
+			    ];
+			    
+			    var small3 = [
+					{name: 4},
+					{name: 6},
+					{name: "stephanos"},
+					{name: "george"}
+			    ];
+			    
+				
+			    raises(function() {PrefixSearch(null).build();}, "Null list.");
+			    raises(function() {PrefixSearch(undefined).build();}, "Undefined list.");
+			    var pf = PrefixSearch(small1);
+			    ok(pf.build(), "Small string list.");
+			    equals(pf.size(), 4, "Small string list, correct size.");
+			    pf = PrefixSearch(small2, 'name');
+			    ok(pf.build(), "Small object list.");
+			    equals(pf.size(), 4, "Small object list, correct size.");
+			    raises(function() {pf.build();}, "Small object list, no index.");
+			    raises(function() {PrefixSearch(small2, 'surname').build();}, "Small object list, non-existing index.");
+			    raises(function() {PrefixSearch(small2, null).build();}, "Small object list, null index.");
+			    raises(function() {PrefixSearch(small2, undefined).build();}, "Small object list, undefined index.");
+			    raises(function() {PrefixSearch(small3, 'name').build();}, "Small object list, indexes of many types, not strings.");
+
+			    var medium1 = [],
+			    	medium2 = [],
+			    	i = 0;
+			    
+			    for(i = 0; i < 1000; i++) {
+			        medium1.push(new String(i));
+			    }
+			    
+			    for(i = 0; i < 1000; i++) {
+			        medium2.push({name: new String(i)});
+			    }
+			    
+			    raises(function() {PrefixSearch(null).build();}, "Null list.");
+			    raises(function() {PrefixSearch(undefined).build();}, "Undefined list.");
+			    pf = PrefixSearch(medium1); 
+			    ok(pf.build(), "Medium string list.");
+			    equals(pf.size(), 1000, "Medium string list, correct size.");
+			    pf = PrefixSearch(medium2, 'name');
+			    ok(pf.build(), "Medium object list.");
+			    equals(pf.size(), 1000, "Medium object list, correct size.");
+			    raises(function() {PrefixSearch(medium2).build();}, "Medium object list, no index.");
+			    raises(function() {PrefixSearch(medium2, 'surname').build();}, "Medium object list, non-existing index.");
+			    raises(function() {PrefixSearch(medium2, null).build();}, "Medium object list, null index.");
+			    raises(function() {PrefixSearch(medium2, undefined).build();}, "Medium object list, undefined index.");
+			    
+				/* var large = [];
+				for(i = 0; i < 2000000; i++) {
+			        large.push({name: new String(i)});
+			    }
+				pf = PrefixSearch(large, 'name');
+			    ok(pf.build(), "Large object list."); */
+			});
+			
+			module("Flatten tests");
+			
+			test("_flatten()", function() {
+			    
+			    var small = [ 
+					"alex",
+					"maria",
+					"stephanos",
+					"george"
+				];
+			    
+			    var pf = PrefixSearch(small);
+			    pf.build();
+				var node = pf._attrs.trie;
+				deepEqual(pf._ut.flatten(node), small, "Flatten small list.");
+				
+				var medium = [];
+				for(i = 0; i < 20000; i++) {
+			        medium.push(new String(i));
+			    }
+				pf = PrefixSearch(medium);
+				pf.build();
+				node = pf._attrs.trie;
+				equals(pf._ut.flatten(node).length, 20000, "Flatten 20K elements.");
+				deepEqual(pf._ut.flatten(null), [], "Flatten null node.");
+				deepEqual(pf._ut.flatten(undefined), [], "Flatten undefined node.");
+			});
+			
+			module("Search tests");
+			
+			test("search()", function() {
+			    
+			    var small = [ 
+					"alex",
+					"maria",
+					"stephanos",
+					"george",
+					"alekos",
+					"alexander",
+					"charis",
+					"giorkos",
+					"cokos"
+				];
+			    
+			    var pf = PrefixSearch(small);
+			    pf.build();
+				var node = pf._attrs.trie;
+				equals(pf.search("al").length, 3);
+				equals(pf.search("a").length, 3);
+				equals(pf.search("alex").length, 2);
+				equals(pf.search("m").length, 1);
+				equals(pf.search("g").length, 2);
+				equals(pf.search("c").length, 2);
+				equals(pf.search("ch").length, 1);
+				deepEqual(pf.search(""), [], "Empty search term.");
+				raises(function() {pf.search(null)}, "Null search term.");
+				raises(function() {pf.search(undefined)}, "Undefined search term.");
+				
+			});
+			
+			
+			module("Add tests");
+			
+			test("add()", function() {
+			    
+			    var small = [ 
+					"alex",
+					"maria",
+					"stephanos",
+					"george",
+				];
+			    
+			    var pf = PrefixSearch(small);
+			    pf.build();
+			    equals(pf.search("al").length, 1);
+			    pf.add("alekos");
+				equals(pf.search("al").length, 2);
+				pf.add("alexandros");
+				equals(pf.search("a").length, 3);
+				equals(pf.search("alex").length, 2);
+				equals(pf.search("m").length, 1);
+				pf.add("mariaz");
+				equals(pf.search("m").length, 2);
+				pf.add("charis");
+				equals(pf.search("c").length, 1);
+				pf.add("charis");
+				equals(pf.search("c").length, 1, "Add same string twice.");
+				equals(pf.size(), 8);
+
+				raises(function() {pf.add(1);}, "Add number.");
+				pf.add(null);
+				pf.add(undefined);
+				equals(pf.size(), 8, "Null or undefined do not affect size.");
+				raises(function() {pf.add({name: "Asfa"});}, "Add object in string trie.");
+				
+				var small2 = [
+					{name: "alex"},
+					{name: "maria"},
+					{name: "stephanos"},
+					{name: "george"}
+				];
+				
+				pf = PrefixSearch(small2, "name");
+				pf.build();
+				
+				equals(pf.search("al").length, 1);
+			    pf.add({name:"alekos"});
+				equals(pf.search("al").length, 2);
+				pf.add({name:"alexandros"});
+				equals(pf.search("a").length, 3);
+				equals(pf.search("alex").length, 2);
+				equals(pf.search("m").length, 1);
+				pf.add({name:"mariaz"});
+				equals(pf.search("m").length, 2);
+				pf.add({name:"charis"});
+				equals(pf.search("c").length, 1);
+				equals(pf.size(), 8);
+				pf.add({name:"charis"});
+				equals(pf.search("c").length, 1, "Add same object twice.");
+				equals(pf.size(), 8);
+
+				raises(function() {pf.add({surname:"kokos"});}, "Add object with no index property.");
+				raises(function() {pf.add(1);}, "Add number.");
+				raises(function() {pf.add("name");}, "Add string in object trie.");
+								
+			});
+
+		});
+	</script>
+</head>
+<body>
+	<h1  id="qunit-header">Prefix Search JS Test Suite</h1>
+ 	<h2  id="qunit-banner"></h2>
+ 	<div id="qunit-testrunner-toolbar"></div>
+ 	<h2  id="qunit-userAgent"></h2>
+ 	<ol  id="qunit-tests"></ol>
+ 	<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>
