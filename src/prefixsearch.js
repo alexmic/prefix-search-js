@@ -233,6 +233,11 @@ var PrefixSearch = function(_data, _index)
             isString: _isString
         },
         
+        /**
+         * Search for all words having 'term' as a prefix.
+         * @param term
+         * @returns {Array} List of results, either objects or strings.
+         */
         search: function(term)
         {
             _ensureInit();
@@ -245,11 +250,20 @@ var PrefixSearch = function(_data, _index)
             return _find(trie, term);
         },
         
+        /**
+         * Get number of words in the trie.
+         * @returns {Number}
+         */
         size: function()
         {
             return numItems;
         },
         
+        /**
+         * Add a new word (or object) in the trie.
+         * @param object {Object} String or object to add.
+         * @returns Void.
+         */
         add: function(object)
         {
             _ensureInit();
@@ -272,6 +286,12 @@ var PrefixSearch = function(_data, _index)
             return _insert(trie, term, object);
         },
         
+        /**
+         * Build the trie with the initial data. If the data is too big, then
+         * building will be deferred and executed async in a setTimeout so that
+         * it does not block the UI.
+         * @returns Void.
+         */
         build: function()
         {
             if (tempData.length > 50000) {
